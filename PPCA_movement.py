@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 species = [0, 1, 2, 3]
 
 BP =            [None, 0.4, 0.6, 0.2]
-DP =            [None, None, 0.001, 0.001]
+DP =            [None, None, 0.01, 0.001]
 CP =            [None, 0.9, 0.5, None]
 MP =            [None, 0.3, 0.3, 0.5]
 
@@ -39,6 +39,7 @@ class Cell:
         self.moveprob  = MP[desired_species]
 
 
+# Function to check health of code
 def healthy(place):
     if place.kind is 0:
         assert place.birthprob == BP[0]
@@ -54,6 +55,7 @@ def healthy(place):
         assert place.deathprob == DP[3]
 
 
+# Functions to count numbers of animals
 def check_neighbours(i, j, grid):
 
     prey = 0
@@ -266,6 +268,7 @@ def reproduction(place, i, j, grid):
         # Checks if low level predator dies by natural causes
         r = rnd.random()
         if Cell(2).deathprob >= r:
+            print('low died!')
             place.update_cell(0, 1)
 
     elif place.kind == 3:
@@ -273,6 +276,7 @@ def reproduction(place, i, j, grid):
         # Checks if top level predator dies by natural causes
         r = rnd.random()
         if Cell(3).deathprob >= r:
+            print('top died!')
             place.update_cell(0, 1)
 
     if place.kind == 0:
@@ -413,20 +417,24 @@ def plot_statistics(prey_list, low_pred_list, top_pred_list, x_value):
 def change_over_time(dim):
     # Function to initialize a grid and call CA-update function
     # Returns the 3 vectors with numbers of different animals
-    
+
     prey_list = np.zeros(frames)
     low_pred_list = np.zeros(frames)
     top_pred_list = np.zeros(frames)
 
     grid = define_grid(dim)
 
-    for i in range(steps):
+    for i in range(frames):
         grid = update(dim, grid)
+        ans = counter(grid, dim)
+        prey_list[i] = ans[1]
+        low_pred_list[i] = ans[2]
+        top_pred_list[i] = ans[3]
 
-    return grid
-    
-    
-    
+    plot_statistics(prey_list, low_pred_list, top_pred_list, 'time')
+    # return prey_list, low_pred_list, top_pred_list
+
+
+change_over_time(dimensions)
 
 # run_several_ca(10)
-
