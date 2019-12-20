@@ -9,11 +9,10 @@ import matplotlib.pyplot as plt
 # Vector of desired species
 species = [0, 1, 2, 3]
 
-BP =            [None, 0.4, 0.3, 0.2]
+BP =            [None, 0.4, 0.6, 0.2]
 DP =            [None, None, 0.001, 0.001]
-CP =            [None, 0.9, 0.7, None]
-MP =            [None, 0.5, 0.5, 0.5]
-
+CP =            [None, 0.9, 0.5, None]
+MP =            [None, 0.3, 0.3, 0.5]
 
 frames = 100
 dimensions = 10
@@ -28,6 +27,7 @@ class Cell:
         self.birthprob = BP[kind]
         self.deathprob = DP[kind]
         self.catchprob = CP[kind]
+        self.moveprob  = MP[kind]
 
     def update_cell(self, desired_species, desired_state):
         # Creates a new species in cell
@@ -36,6 +36,7 @@ class Cell:
         self.birthprob = BP[desired_species]
         self.deathprob = DP[desired_species]
         self.catchprob = CP[desired_species]
+        self.moveprob  = MP[desired_species]
 
 
 def healthy(place):
@@ -183,9 +184,14 @@ def counter(grid, dim):
 def move(grid, move_from, move_to, state):
     # Moves animal from move_from to move_to
 
-    place_from = grid[move_from[0]][move_from[1]]
-    grid[move_to[0]][move_to[1]] = place_from
+    old_kind = grid[move_from[0]][move_from[1]].kind
+    old_state = grid[move_from[0]][move_from[1]].state
+
+    grid[move_to[0]][move_to[1]] = Cell(old_kind)
+    grid[move_to[0]][move_to[1]].state = old_state
+
     grid[move_from[0]][move_from[1]].update_cell(0, state)
+
 
     return grid
 
@@ -333,9 +339,33 @@ def update(dim, grid):
             state = reproduction(state, k, l, grid)
             new_grid[k][l] = state
 
+    idx = generate_idx(dim)
+    for i in range(len(idx)):
+        # Allows all able cells (animals, not empty cells) to walk in random order
 
+        temp = idx[i]    # Decides randomly what cell will move
+        a = temp[0]
+        b = temp[1]
+        if new_grid[a][b].kind != 0 and new_grid[a][b].moveprob > rnd.random():
+            [empty, empty_indices] = check_empty_cells(a, b, new_grid)
+            if empty > 0:
+                num = int(rnd.random() * empty)
+
+                # Defines where to move to, and moves the cell [a, b]
+                move_to = empty_indices[num]
+                new_grid = move(new_grid, [a, b], move_to, 1)
 
     return new_grid
+
+
+def generate_idx(dim):
+    from random import shuffle
+    idx = []
+    for i in range(dim):
+        for j in range(dim):
+            idx.append([i, j])
+    shuffle(idx)
+    return idx
 
 
 def cellular_automaton(dim, steps):
@@ -343,13 +373,9 @@ def cellular_automaton(dim, steps):
     # Returns the grid after steps amount of steps
 
     grid = define_grid(dim)
-    # ans = counter(grid, dim)
-    # print('Starts with: ' + str(ans))
 
     for i in range(steps):
         grid = update(dim, grid)
-        # ans = counter(grid, dim)
-        # print('After returning value: ' + str(ans))
 
     return grid
 
@@ -384,4 +410,23 @@ def plot_statistics(prey_list, low_pred_list, top_pred_list, x_value):
     plt.show()
 
 
-run_several_ca(10)
+def change_over_time(dim):
+    # Function to initialize a grid and call CA-update function
+    # Returns the 3 vectors with numbers of different animals
+    
+    prey_list = np.zeros(frames)
+    low_pred_list = np.zeros(frames)
+    top_pred_list = np.zeros(frames)
+
+    grid = define_grid(dim)
+
+    for i in range(steps):
+        grid = update(dim, grid)
+
+    return grid
+    
+    
+    
+
+# run_several_ca(10)
+
