@@ -1,4 +1,4 @@
-vegetation system:
+Health and Hunger:
 
 each gridcell has a vegetation stat ([0, 100]?:
   increases by dVeg0 when empty
@@ -14,9 +14,14 @@ each gridcell has a vegetation stat ([0, 100]?:
    malnutrition, health increases/decreases proportional (^n?) to difference to 50.
   if health = 0:
     dies
+  old vegetation is transferred to the "new" cell
   
   herbivores has an increase in hunger stat when on a cell with vegetation (or above threshhold(10?))
   predators has an increase in hunger stat when eating (different increases?)
+  
+ animals can only reproduce when hp is over a threshhold
+
+
 
 movement system:
   animals cant see the situation on a cell before moving there (hence random).
@@ -28,4 +33,3 @@ movement system:
     
   moving decreases hunger:
     different for different animals
-  
