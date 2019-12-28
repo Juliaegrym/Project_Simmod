@@ -15,11 +15,11 @@ CP =            [None, 0.9, 0.5, None]
 MP =            [None, 0.3, 0.3, 0.5]
 
 frames = 100
-dimensions = 10
+dimensions = 5
 # Threshold for overpopulation of herbivores
 op_threshold = 3
 
-
+ccc = 0
 class Cell:
     def __init__(self, kind):
         self.kind = kind    # 0 = empty, 1 = prey, 2 = low_pred, 3 = top_pred
@@ -170,7 +170,7 @@ def check_empty_cells(i, j, grid):
 
 
 def counter(grid, dim):
-
+    global ccc
     # Before counting all n.o. species are set to zero
     counting_vector = [0, 0, 0, 0]      # [empty, prey, low_pred, top_pred]
 
@@ -178,8 +178,10 @@ def counter(grid, dim):
     for i in range(dim):
         for j in range(dim):
             num = grid[i][j].kind       # Index of counting vector = species reference number
-            counting_vector[num] += 1   # Ticks up when a species of that index/kind is found
-
+            counting_vector[num] += 1 # Ticks up when a species of that index/kind is found
+            if ccc < dim:
+                print(num, '-------')   
+            ccc += 1
     return counting_vector
 
 
@@ -195,7 +197,7 @@ def move(grid, move_from, move_to, state):
     grid[move_from[0]][move_from[1]].update_cell(0, state)
 
 
-    return grid
+    return 
 
 
 def attack(place, i, j, grid):
@@ -260,10 +262,11 @@ def reproduction(place, i, j, grid):
     [prey, low_pred, top_pred, prey_indices, low_pred_indices, top_pred_indices] = check_neighbours(i, j, grid)
     [low_eaten, top_eaten] = check_eaten_neighbours(i, j, grid)
 
+    #prey dies by overpopulation
     if (place.kind == 1) and (prey >= op_threshold):
         place.update_cell(0, 1)
 
-    if place.kind == 2:
+    elif place.kind == 2:
 
         # Checks if low level predator dies by natural causes
         r = rnd.random()
@@ -279,7 +282,7 @@ def reproduction(place, i, j, grid):
             print('top died!')
             place.update_cell(0, 1)
 
-    if place.kind == 0:
+    elif place.kind == 0:
 
         # Checks if the empty cell was empty from the start
         # If no low level predators, preys can reproduce with some probability
@@ -310,7 +313,7 @@ def reproduction(place, i, j, grid):
     if place.state != 1:
         place.state = 1
 
-    return place
+    return 
 
 
 def define_grid(dim):
@@ -321,6 +324,7 @@ def define_grid(dim):
         for j in range(dim):
             num = int(rnd.random()*4)
             grid[i][j] = Cell(int(num))
+            print(num)
 
     return grid
 
@@ -339,9 +343,7 @@ def update(dim, grid):
 
     for k in range(dim):
         for l in range(dim):
-            state = new_grid[k][l]
-            state = reproduction(state, k, l, grid)
-            new_grid[k][l] = state
+            reproduction(new_grid[k][l], k, l, grid)
 
     idx = generate_idx(dim)
     for i in range(len(idx)):
@@ -357,7 +359,7 @@ def update(dim, grid):
 
                 # Defines where to move to, and moves the cell [a, b]
                 move_to = empty_indices[num]
-                new_grid = move(new_grid, [a, b], move_to, 1)
+                move(new_grid, [a, b], move_to, 1)
 
     return new_grid
 
@@ -380,7 +382,6 @@ def cellular_automaton(dim, steps):
 
     for i in range(steps):
         grid = update(dim, grid)
-
     return grid
 
 
@@ -425,16 +426,19 @@ def change_over_time(dim):
     grid = define_grid(dim)
 
     for i in range(frames):
-        grid = update(dim, grid)
         ans = counter(grid, dim)
         prey_list[i] = ans[1]
         low_pred_list[i] = ans[2]
         top_pred_list[i] = ans[3]
+        grid = update(dim, grid)
+    ans = counter(grid, dim)
+    prey_list[i] = ans[1]
+    low_pred_list[i] = ans[2]
+    top_pred_list[i] = ans[3]
+        
 
     plot_statistics(prey_list, low_pred_list, top_pred_list, 'time')
     # return prey_list, low_pred_list, top_pred_list
 
 
 change_over_time(dimensions)
-
-# run_several_ca(10)
