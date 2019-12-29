@@ -4,20 +4,24 @@ import matplotlib
 matplotlib.use('TKAgg')
 import matplotlib.pyplot as plt
 from matplotlib import animation
+from matplotlib import colors
 # 0 = empty, 1 = prey, 2 = low_pred, 3 = top_pred
 # Vector of desired species
 species = [0, 1, 2, 3]
 
 BP =            [None, 0.8, 0.8, 0.5]
 DP =            [None, None, 0.1, 0.1]
-CP =            [None, 0.8, 0.3, None]
+CP =            [None, 1, 0.3, None]
 MP =            [None, 0.1, 0.2, 0.4]   #moveprob
 
-numframes = 300
+numframes = 100
 dimensions = 40
 # Threshold for overpopulation of herbivores
 op_threshold = 3
 
+colormap = colors.ListedColormap(['k','b','y','g','r'])
+cm2 = colors.ListedColormap(['k','b','y'])
+cm3 =colors.ListedColormap(['k','b'])
 class Cell:
     def __init__(self, kind):
         self.kind = kind    # 0 = empty, 1 = prey, 2 = low_pred, 3 = top_pred
@@ -200,7 +204,7 @@ def attack(place, i, j, grid):
     [prey, low_pred, top_pred, prey_indices, low_pred_indices, top_pred_indices] = check_neighbours(i, j, grid)
 
     # Cell contains a prey
-    if (place.kind == 1) and (low_pred > 0):
+    if (place.kind == 1) and (low_pred > 0) and 1 == 0:
         
 
         # Probability of prey surviving low level predator
@@ -465,7 +469,7 @@ def plot_statistics(prey_list, low_pred_list, top_pred_list, x_value):
     plt.ylabel('N.o. animals')
     plt.title('Populations for NxN grid. N = '+str(dimensions))
     MM = max(max(prey_list), max(low_pred_list), max(top_pred_list))
-    plt.text(numframes-65, MM+50, 'BP = '+str(BP) + '\n' + 'DP = '+str(DP) + '\n'+ 'CP = '+str(CP) + '\n' + 'MP = '+str(MP)) 
+    plt.text(-3, MM+50, 'BP = '+str(BP) + '\n' + 'DP = '+str(DP) + '\n'+ 'CP = '+str(CP) + '\n' + 'MP = '+str(MP)) #numframes-65
     plt.legend()
     plt.show()
 
@@ -497,27 +501,22 @@ def change_over_time(dim):
 
 
 def animate():
-    global im
     grid = define_grid(dimensions)
     Pgrid = convert(grid)
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    im = ax.imshow(Pgrid)
+    im = ax.imshow(Pgrid, cmap = colormap)
     fig.colorbar(im)
     
-    temp_V = []
-    for i in range(numframes):
-        temp_V.append(grid)
-
-    anim = animation.FuncAnimation(fig, anim_help, frames = temp_V, blit=True, repeat=False) #interval = 50?
+    temp_V = [grid]*numframes
+    anim = animation.FuncAnimation(fig, anim_help, frames = temp_V, blit = False, fargs = [ax], repeat=False) #interval = 50?
     plt.show()
 
-def anim_help(grid):
-    global im
-    print('fjidsalahfoldsafhjkdkashjk')
+def anim_help(grid, ax):
     update(grid)
     Pgrid = convert(grid)
-    im.set_array(Pgrid)
+    #im.set_array(Pgrid)
+    im = ax.imshow(Pgrid, cmap = colormap)
     return im
 
 def convert(grid):
@@ -528,6 +527,48 @@ def convert(grid):
             Pgrid[i][j] = float(grid[i][j].kind)
     return Pgrid
 
+def animAndstat():
+    global prey_list, low_pred_list, top_pred_list, idx
+    grid = define_grid(dimensions)
+    Pgrid = convert(grid)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    im = ax.imshow(Pgrid, cmap = colormap)
+    fig.colorbar(im)
+    
+    #count
+    prey_list = np.zeros(numframes)
+    low_pred_list = np.zeros(numframes)
+    top_pred_list = np.zeros(numframes)
+    ans = counter(grid, dimensions)
+    prey_list[0] = ans[1]
+    low_pred_list[0] = ans[2]
+    top_pred_list[0] = ans[3]
 
-animate()
+    temp_V = [grid]*numframes
+    idx = 1
+    anim = animation.FuncAnimation(fig, anim_help_2, frames = temp_V, blit = False, fargs = [ax], repeat=False) #interval = 50?
+    
+    plt.show()
+    plt.figure(2)
+    plot_statistics(prey_list, low_pred_list, top_pred_list, 'Frames')
+    plt.show()
+
+
+def anim_help_2(grid, ax):
+    global prey_list, low_pred_list, top_pred_list, idx
+    update(grid)
+    #count
+    ans = counter(grid, dimensions)
+    prey_list[idx] = ans[1]
+    low_pred_list[idx] = ans[2]
+    top_pred_list[idx] = ans[3]
+
+    Pgrid = convert(grid)
+    #im.set_array(Pgrid)
+    im = ax.imshow(Pgrid, cmap = colormap)
+    idx +=1
+    return im
+
+animAndstat()
 #change_over_time(dimensions)
